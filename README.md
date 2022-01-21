@@ -6,12 +6,9 @@
 R version 4.1.0 (2021-05-18)
 
 ### Libraries
-tidyverse 
-
-readxl 
-
-stringr
-
+- tidyverse
+- readxl
+- stringr
 
 ### Input files
 Input files should be in a folder called "inputs" in the same directory as the scripts
