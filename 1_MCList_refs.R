@@ -1,6 +1,6 @@
 # AUTHOR: Jenny Kay
 # PURPOSE: compiling references showing mammary tumor induction by chemicals in vivo
-# last update: 2022-11-18
+# last update: 2022-01-21
 # written in version: R version 4.1.0 (2021-05-18)
 
 
@@ -46,45 +46,55 @@ IARC <- read_excel("./inputs/IARCmonoMCchems.xlsx") %>%
 
 
 #### 14th Report on Carcinogens ####
+# ROC pdfs downloaded from https://ntp.niehs.nih.gov/whatwestudy/assessments/cancer/roc/index.html
 # Results from the 14th ROC were gathered by searching pdfs for the term "mammary,"
 #    then looking at results for tumors in experimental animals and including the chemical 
 #    if there was at least one study showing significant induction of mammary tumors
-ROC14 <- read_excel("./inputs/ROC_ChemswithMC.xlsx") %>% 
-  # remove things w/o DTXSIDs because they're groups (e.g., steroidal estrogens) 
-  # or duplicates (e.g., procarbazine duplicate for procarbazine HCl)
-  filter(is.na(DTXSID) == FALSE) %>% 
-  mutate(ROC14_result = "ROC14") %>% 
-  select(CASRN, DTXSID, Chemname, ROC14_result)
+ROC15 <- read_excel("./inputs/ROC15_ChemswithMC.xlsx") %>% 
+  mutate(ROC15_result = "ROC15") %>% 
+  select(CASRN, Chemname, ROC15_result)
 
 
 #### NTP technical reports ####
 
-#Downloaded two files from NTP's Chemical Effects on Biological Systems database https://manticore.niehs.nih.gov/organsites
-# The first contains chemicals with positive, clear, or some evidence
-# The second is chemicals where NTP concluded equivocal or dismissed evidence, 
-#    but we considered the underlying data to warrant inclusion for mammary tumorigenesis
+#Downloaded results of cancer bioassays from NTP's Chemical Effects on Biological Systems database 
+#     https://manticore.niehs.nih.gov/organsites on Jan 21 2022
 
-NTP_pos <- read_excel("./inputs/CEBS_chems_mammarycancer.xlsx") %>% 
-  mutate(result = "NTP") %>% 
-  mutate(CASRN = ifelse(`Test Article Name` == "Phenesterin", "3546-10-9", CASRN)) %>% 
-  select(CASRN, `Test Article Name`, result) %>% 
-  unique()
-
-NTP_equiv <- read_excel("./inputs/CEBS_chems_EquivOrDismissMC.xlsx") %>% 
-  mutate(result = ifelse(grepl('quivocal', `Level of Evidence`, fixed = TRUE), "NTP_equivocal", "NTP_dismissed")) %>% 
-  select(CASRN, `Test Article Name`, result) %>% 
-  unique()
-
-NTP <- full_join(NTP_pos, NTP_equiv, by = "CASRN") %>% 
-  mutate(chemname = coalesce(`Test Article Name.x`, `Test Article Name.y`)) %>% 
-  mutate(NTP_result = coalesce(result.x, result.y)) %>% 
+NTP_CEBS <- read_tsv("./inputs/NTPCEBS_2022-01-21-site_data.tsv") %>% 
+  # The raw download's column names clearly all messed up... 
+  #    renamed columns of interest to review results 
+  rename(CASRN = `Publication No.`, tumorsite = CASRN, tumortype = `Test Article No.`, 
+         NTP_result = `Testing Status URL`, sex = `Study No.`, species = Sex, chemname = `Finding Type`) %>% 
+  filter(tumorsite == "Mammary Gland") %>% 
+  # select only columns needed for constructing MC list
   select(CASRN, chemname, NTP_result) %>% 
+  mutate(NTP_result = case_when(str_detect(NTP_result, 'quiv') ~ "NTP_equivocal",
+                                str_detect(NTP_result, 'ositive|lear|ome') ~ "NTP",
+                                TRUE ~ "check")) %>% 
+  pivot_wider(names_from = "NTP_result", values_from = "NTP_result") %>% 
+  mutate(NTP_result = case_when(str_detect(NTP, 'NTP') ~ "NTP",
+                                str_detect(NTP_equivocal, 'equiv') ~ "NTP_equivocal",
+                                TRUE ~ "check")) %>% 
+  select(-c(NTP_equivocal, NTP)) %>% 
   unique()
+
+# Leucomalachite green, PeCDF, and amsonic acid were previously flagged as having 
+#    legitimate mammary tumor induction dismissed in NTP bioassays 
+#    Add to df as "NTP_dismissed"
+NTP_dismissed <- data.frame(c("129-73-7", "57117-31-4", "7336-20-1"),
+                            c("Leucomalachite green", "2,3,4,7,8-Pentachlorodibenzofuran", "4,4'-Diamino-2,2'-stilbenedisulfonic acid, disodium salt"), 
+                            c("NTP_dismissed", "NTP_dismissed", "NTP_dismissed"))
+
+colnames(NTP_dismissed) <- c("CASRN", "chemname", "NTP_result")
+colnames <- NTP_dismissed
+
+NTP <- rbind(NTP_CEBS, NTP_dismissed)
+
 
 
 #### EPA IRIS reports ####
 # chemicals that induce mammary tumors downloaded from 
-#     https://ntp.niehs.nih.gov/whatwestudy/assessments/cancer/roc/index.html
+#     https://iris.epa.gov/AdvancedSearch/ after searching "mammary"
 EPA_IRIS <- read_excel("./inputs/EPA_IRIS_MCs.xlsx") %>% 
   select(CASRN, DTXSID, `Chemical Name`) %>% 
   mutate(EPA_IRIS_result = "EPA_IRIS")  
@@ -95,7 +105,7 @@ EPA_IRIS <- read_excel("./inputs/EPA_IRIS_MCs.xlsx") %>%
 #     Eligibility Decisions (REDs) and human health risk assessments
 # Pesticides flagged for induction of mammary tumors as reported in Cardona and Rudel 2020
 #     DOI 10.1016/j.mce.2020.110927
-EPA_OPP <- read_excel("./inputs/EPA_RED_MCs.xlsx") %>% 
+EPA_OPP <- read_excel("./inputs/EPA_OPP_MCs.xlsx") %>% 
   mutate(EPA_OPP_result = ifelse(EPA_RED_result == "positive", "EPA_OPP", paste0("EPA_OPP_", EPA_RED_result)))
 
 
@@ -147,7 +157,7 @@ LCDB <- read_excel("./inputs/LCDB_Mammary_Carcinogens.xlsx") %>%
 
 ####### Complete list of MCs from sources above #########
 
-MCList_refs <- full_join(IARC, ROC14, by = "CASRN") %>% 
+MCList_refs <- full_join(IARC, ROC15, by = "CASRN") %>% 
   full_join(NTP, by = "CASRN") %>% 
   full_join(EPA_IRIS, by = "CASRN") %>% 
   full_join(EPA_OPP, by = "CASRN") %>% 
@@ -159,7 +169,7 @@ MCList_refs <- full_join(IARC, ROC14, by = "CASRN") %>%
                             CASRN == "82617-23-0" ~ "DTXSID801002821", 
                             CASRN == "834-24-2" ~ "DTXSID001019381",
                             CASRN == "87625-62-5" ~ "DTXSID20892005", 
-                            TRUE ~ DTXSID)) %>% 
+                            TRUE ~ DTXSID.x)) %>% 
   mutate(preferred_name = case_when(CASRN == "2393-53-5" ~ "17-Oxoestra-1(10),2,4-trien-3-yl benzoate",
                             CASRN == "82617-23-0" ~ "Oxiran-2-yl hydrogen carbonimidate", 
                             CASRN == "834-24-2" ~ "4-aminostilbene",
@@ -181,7 +191,7 @@ MCList_refs <- full_join(IARC, ROC14, by = "CASRN") %>%
   mutate(CASRN = coalesce(CASRN.y, CASRN.x)) %>% 
   mutate(chem_name = coalesce(preferred_name.y, preferred_name.x, Chemname.x, 
                               Chemname.y, chemname.x, chemname.y, `Chemical Name`, Preferred_name, name)) %>% 
-  unite(IARC_result, ROC14_result, NTP_result, EPA_IRIS_result, EPA_OPP_result, CCRIS_result, LCDB_Result, 
+  unite(IARC_result, ROC15_result, NTP_result, EPA_IRIS_result, EPA_OPP_result, CCRIS_result, LCDB_Result, 
         col = "MC_references", na.rm = TRUE, sep = ", ") %>% 
   select(CASRN, DTXSID, chem_name, MC_references) %>% 
   unique() %>% 

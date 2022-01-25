@@ -363,14 +363,14 @@ MC_notP65 <- BCrel_Effects_and_Sources %>%
   filter(is.na(Prop65)==TRUE) %>% 
   filter(MC == "MC") %>% 
   #find chems listed by authoritative bodies (ABs) recognized by OEHHA
-  filter(str_detect(MC_references, "IARC|EPA|NTP|ROC14")) %>% 
+  filter(str_detect(MC_references, "IARC|EPA|NTP|ROC15")) %>% 
   #remove ionizing radiation, 4'OH-PCB-61, and things where the AB dismissed or found equivocal evidence for MC
   filter(str_detect(chem_name, "green|azine|Clonitralid|4'OH")==FALSE) %>% 
   filter(str_detect(chem_name, "Chloroacetophenone|Triclopyr|3-Iodo")==FALSE) %>% 
-  filter(str_detect(chem_name, "2,3,4,7,8|Cyfluthrin|disodium")==FALSE) %>% 
+  filter(str_detect(chem_name, "2,3,4,7,8|Cyfluthrin|stilbenedisulfonic")==FALSE) %>% 
   filter(str_detect(chem_name, "Ametryn|Isoeugenol|Ionizing")==FALSE) %>% 
-  # remove prescription drugs
-  filter(grepl("Rx", Pharma, fixed = TRUE) == FALSE) %>% 
+  # remove steroidal estrogens b/c they're Prop65 listed as a group
+  filter(str_detect(chem_name, "Estriol|Ethynodiol") == FALSE) %>% 
   subset(select = -c(E2_onedose_up:P4_CR_up))
 
 #write.csv(MC_notP65, "./outputs/MCs_not_Prop65_carcinogens.csv", row.names = FALSE)
