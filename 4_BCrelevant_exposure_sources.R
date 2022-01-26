@@ -26,7 +26,9 @@ BCrelList <- read.csv("./outputs/BCRelList.csv")
 # downloaded from CompTox Dashboard https://clowder.edap-cluster.com/datasets/61147fefe4b0856fdc65639b?space=6112f2bee4b01a90a3fa7689#folderId=616dd716e4b0a5ca8aeea68e&page=0
 chemids <- read.csv("./inputs/DSSTox_Identifiers_and_CASRN_2021r1.csv") %>%
   rename(CASRN = casrn, DTXSID = dtxsid, preferred_name = preferredName) %>% 
-  select(CASRN, DTXSID, preferred_name)
+  select(CASRN, DTXSID, preferred_name) %>% 
+  # some characters showed up weird for 1,2-benzenediol
+  mutate(preferred_name = ifelse(CASRN == "120-80-9", "1,2-Benzenediol", preferred_name))
 
 # needed to make chemids glossary all lowercase for matching to FDA drug database
 lowercase_chemids <- chemids %>% 
@@ -254,7 +256,7 @@ ExposureSources <- full_join(CPDat_exposures, ExpoCast, by = "DTXSID") %>%
   
   select(CASRN:chem_name, Consumer:Industrial, Environmental_media, HPV, U95intake)
 
-
+#(ExposureSources, "./outputs/ExposureSources.csv", row.names = FALSE)
 
 
 
@@ -365,12 +367,14 @@ MC_notP65 <- BCrel_Effects_and_Sources %>%
   #find chems listed by authoritative bodies (ABs) recognized by OEHHA
   filter(str_detect(MC_references, "IARC|EPA|NTP|ROC15")) %>% 
   #remove ionizing radiation, 4'OH-PCB-61, and things where the AB dismissed or found equivocal evidence for MC
-  filter(str_detect(chem_name, "green|azine|Clonitralid|4'OH")==FALSE) %>% 
+  filter(str_detect(chem_name, "malachite|Terbutylazine|Clonitralid|4'OH")==FALSE) %>% 
   filter(str_detect(chem_name, "Chloroacetophenone|Triclopyr|3-Iodo")==FALSE) %>% 
-  filter(str_detect(chem_name, "2,3,4,7,8|Cyfluthrin|stilbenedisulfonic")==FALSE) %>% 
+  filter(str_detect(chem_name, "Pentachlorodibenzofuran|Cyfluthrin|stilbenedisulfonic")==FALSE) %>% 
   filter(str_detect(chem_name, "Ametryn|Isoeugenol|Ionizing")==FALSE) %>% 
   # remove steroidal estrogens b/c they're Prop65 listed as a group
   filter(str_detect(chem_name, "Estriol|Ethynodiol") == FALSE) %>% 
+  # remove Aroclor 1254 b/c Prop65 lists PCBs as a group
+  filter(str_detect(chem_name, "Aroclor") == FALSE) %>%
   subset(select = -c(E2_onedose_up:P4_CR_up))
 
 #write.csv(MC_notP65, "./outputs/MCs_not_Prop65_carcinogens.csv", row.names = FALSE)

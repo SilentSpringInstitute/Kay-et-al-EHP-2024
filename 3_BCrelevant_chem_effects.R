@@ -21,7 +21,9 @@ options(stringsAsFactors = FALSE)
 # downloaded from CompTox Dashboard https://clowder.edap-cluster.com/datasets/61147fefe4b0856fdc65639b?space=6112f2bee4b01a90a3fa7689#folderId=616dd716e4b0a5ca8aeea68e&page=0
 chemids <- read.csv("./inputs/DSSTox_Identifiers_and_CASRN_2021r1.csv") %>%
   rename(CASRN = casrn, DTXSID = dtxsid, preferred_name = preferredName) %>% 
-  select(CASRN, DTXSID, preferred_name)
+  select(CASRN, DTXSID, preferred_name)%>% 
+  # some characters showed up weird for 1,2-benzenediol
+  mutate(preferred_name = ifelse(CASRN == "120-80-9", "1,2-Benzenediol", preferred_name))
 
 
 #### Mammary carcinogens ####
