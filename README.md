@@ -50,3 +50,4 @@ Scripts should be run in order:
 - 3_BCrelevant_chem_effects.R: compile results for E2/P4 synthesis and ER agonism assays, construct list of BC-relevant chemicals 
 - 4_BCrelevant_exposure_sources.R: compile exposure sources for BC-relevant chemicals
 - 5_BCRel-MGdev_comparison.R: compare lists of BC-relevant chemicals and mammary gland developmental toxicants and their genotoxic/endocrine-disrupting properties
+- 6_BCRel_effects_heatmap.R: create a figure showing positive/negative results and BC-relevant chemical space covered for MC, hormone synthesis, ER agonist, and genotoxicity databases 
