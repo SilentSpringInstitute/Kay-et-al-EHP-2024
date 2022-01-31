@@ -199,7 +199,7 @@ for (i in seq(1:dim(toxnet_gentox_results)[1])){
   }
 }
 
-## asta and resa not working
+## asta and resa not working and not define
 
 v_asta = append(v_asta, asta)
 v_resa = append(v_resa, resa)
