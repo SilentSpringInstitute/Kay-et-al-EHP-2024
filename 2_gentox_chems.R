@@ -158,8 +158,7 @@ echemportal <- read_excel("./inputs/eChemPortalAPI_GeneticToxicityVivo_FinalReco
 # NLM TOXNET's GENE-TOX database files
 #    Downloaded at https://www.ncbi.nlm.nih.gov/pcsubstance?term=%22Genetic%20Toxicology%20Data%20Bank%20(GENE-TOX)%22%5BSourceName%5D%20AND%20hasnohold%5Bfilt%5D
 toxnet_gentox_IDs <- read_excel("./inputs/NLM_TOXNET_GENETOX_Substance.xlsx") # key of substance IDs, given as "NLM_TOXNET_GENETOX_n"
-toxnet_gentox_results <- read_tsv("./inputs/NLM_TOXNET_GENTOX_results.txt", # results for each chem ID "NLM_TOXNET_GENETOX_n"
-                                  col_names = c("IDs", "results"), quote = "") %>% 
+toxnet_gentox_results <- read_tsv("./inputs/NLM_TOXNET_GENTOX_results.txt", col_names = c("IDs", "results"), quote = "", skip = 2) %>% 
   filter(IDs != "END") 
 
 v_asta = NULL
@@ -167,6 +166,8 @@ v_resa = NULL
 SOURCE_NAME_SID = NULL
 flag_resa = 0
 flag_asta = 0
+SOURCE_NAME_SID = c("NLM_TOXNET_GENETOX_1")
+
 
 for (i in seq(1:dim(toxnet_gentox_results)[1])){
   value_test = toxnet_gentox_results[i, 1]
@@ -249,5 +250,5 @@ gentox_ccris_ecvam_ntp_echem_toxnet <- ECVAMoverall %>%
   unique()
 
 
-#write.csv(gentox_ccris_ecvam_ntp_echem_toxnet, "./outputs/gentox_ccris_ecvam_ntp_echem_toxnet.csv", row.names = FALSE)
+write.csv(gentox_ccris_ecvam_ntp_echem_toxnet, "./outputs/gentox_ccris_ecvam_ntp_echem_toxnet.csv", row.names = FALSE)
 
