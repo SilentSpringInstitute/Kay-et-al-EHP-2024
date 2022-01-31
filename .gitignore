@@ -1,3 +1,8 @@
+
+# Too large inputs
+inputs/Ring_SupTable-all.chem.preds-2018-11-28.txt
+inputs/DSSTox_Identifiers_and_CASRN_2021r1.csv
+
 # History files
 .Rhistory
 .Rapp.history
