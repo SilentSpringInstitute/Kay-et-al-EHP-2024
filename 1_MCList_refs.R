@@ -16,7 +16,8 @@ setwd(workingdir)
 getwd()
 options(stringsAsFactors = FALSE)
 
-
+# create outputs folder
+dir.create(paste(workingdir, "/outputs/", sep = ""))
 
 ## glossary matching CASRNs to DTXSIDs and chem names
 # downloaded from CompTox Dashboard https://clowder.edap-cluster.com/datasets/61147fefe4b0856fdc65639b?space=6112f2bee4b01a90a3fa7689#folderId=616dd716e4b0a5ca8aeea68e&page=0
@@ -88,10 +89,8 @@ NTP_dismissed <- data.frame(c("129-73-7", "57117-31-4", "7336-20-1"),
                             c("NTP_dismissed", "NTP_dismissed", "NTP_dismissed"))
 
 colnames(NTP_dismissed) <- c("CASRN", "chemname", "NTP_result")
-colnames <- NTP_dismissed
 
 NTP <- rbind(NTP_CEBS, NTP_dismissed)
-
 
 
 #### EPA IRIS reports ####
@@ -200,6 +199,6 @@ MCList_refs <- full_join(IARC, ROC15, by = "CASRN") %>%
   arrange(CASRN)
 
 
-#write.csv(MCList_refs, "./outputs/MCList_refs.csv", row.names = FALSE)
+write.csv(MCList_refs, "./outputs/MCList_refs.csv", row.names = FALSE)
 
 

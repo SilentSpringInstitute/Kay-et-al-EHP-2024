@@ -31,15 +31,15 @@ chemids <- read.csv("./inputs/DSSTox_Identifiers_and_CASRN_2021r1.csv") %>%
 # Downloaded NCI's Chemical Carcinogenesis Research Information System archive from 
 #     https://www.nlm.nih.gov/databases/download/ccris.html
 ccris <- read_excel("./inputs/ccris.xlsx", col_names = FALSE)
-length <- ncol(ccris)
+len_ccris <- ncol(ccris) # you can't use name of function to name a variable
 
 # Full CCRIS download contains a junk row at the top - assign column names as second row
 colnames(ccris) <- ccris[2,] 
 
 ccrisgentox <- ccris[-c(1,2),] %>% # Remove junk rows
-  subset(select = -c(1, 3:59, 61, 62, 65:length)) %>% #pull results only
+  subset(select = -c(1, 3:59, 61, 62, 65:len_ccris)) %>% #pull results only
   select(1,4,3,2) %>%
-  #subset(select = -c(1, 3:51, 65:length)) %>%  #pull results with references
+  #subset(select = -c(1, 3:51, 65:len_ccris)) %>%  #pull results with references
   rename(CASRN = `/DOC/CASRegistryNumber`, chemname = `/DOC/NameOfSubstance`, 
          test = `/DOC/mstu/tsstm`, result = `/DOC/mstu/rsltm`) %>%
   filter(test != 'NA') %>% 
@@ -170,24 +170,37 @@ flag_asta = 0
 
 for (i in seq(1:dim(toxnet_gentox_results)[1])){
   value_test = toxnet_gentox_results[i, 1]
-  if(grepl('NLM_TOXNET_GENETOX', value_test, fixed = TRUE)
-  ){SOURCE_NAME_SID = append(SOURCE_NAME_SID, value_test)
-  if(length(SOURCE_NAME_SID) != 1){
-  if(flag_resa == 1){v_resa = append(v_resa, resa)}
-  else{v_resa = append(v_resa, "NA")}
-  if(flag_asta == 1){v_asta = append(v_asta, asta)}
-  else{v_asta = append(v_asta, "NA")}
-  flag_resa = 0
-  flag_asta = 0}}
+  if(grepl('NLM_TOXNET_GENETOX', value_test, fixed = TRUE)){
+    SOURCE_NAME_SID = append(SOURCE_NAME_SID, value_test)
+    if(length(SOURCE_NAME_SID) != 1){
+      if(flag_resa == 1){
+        v_resa = append(v_resa, resa)
+      }else{
+        v_resa = append(v_resa, "NA")
+      }
+      if(flag_asta == 1){
+        v_asta = append(v_asta, asta)
+      }else{
+        v_asta = append(v_asta, "NA")
+      }
+      flag_resa = 0
+      flag_asta = 0
+    }
+  }
   
   if(toxnet_gentox_results[i, 1] == "asta"){
     asta = toxnet_gentox_results[i,2]
-  flag_asta = 1}
+    flag_asta = 1
+  }
   
   if(toxnet_gentox_results[i, 1] == "resa"){
     resa = toxnet_gentox_results[i,2]
-  flag_resa = 1}
+    flag_resa = 1
   }
+}
+
+## asta and resa not working
+
 v_asta = append(v_asta, asta)
 v_resa = append(v_resa, resa)
 
