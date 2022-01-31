@@ -1,9 +1,9 @@
 # Kay2022
 ## Breast cancer-relevant chemicals paper
 
-### Source code 
+### Programming language 
 
-R version 4.1.0 (2021-05-18)
+- R version 4.1.0 (2021-05-18)
 
 ### Libraries
 - tidyverse
@@ -11,13 +11,13 @@ R version 4.1.0 (2021-05-18)
 - stringr
 
 ### Input files
-Input files should be put in a folder called "inputs" in the same directory as the scripts. Also create a folder in the same directory called "outputs" 
+Input files should be put in the folder called "./inputs/" in the same directory as the scripts. The folder "./outputs/" will be created in the project root. 
 
 - DSSTox_Identifiers_and_CASRN_2021r1.csv: DSSTox DTXSID identifiers mapped to CAS Numbers and Names, downloaded from EPA CompTox Chemicals Dashboard: https://comptox.epa.gov/dashboard/downloads (last update Oct 18, 2021)
 - IARCmonoMCchems.xlsx: chemicals with studies showing induction of mammary tumors recorded in IARC monographs through Vol. 128. Data compiled by authors by searching monograph pdfs and previous records published in Rudel 2007 https://pubmed.ncbi.nlm.nih.gov/17503434/ (data file available in github)
 - ROC15_ChemswithMC.xlsx: chemicals with studies showing induction of mammary tumors recorded in the 15th Report on Carcinogens. Data compiled manually by authors by searching pdfs (data file available in github)
 - NTPCEBS_2022-01-21-site_data.tsv: Results of NTP cancer bioassays downloaded from https://cebs.niehs.nih.gov/organsites/ (data file available in github)
-- EPA_IRIS_MCs.xlsx: EPA IRIS list of chemicals that induce mammary tumors in rodents downloaded from https://iris.epa.gov/AdvancedSearch/ after searching "mammary"
+- EPA_IRIS_MCs.xlsx: EPA IRIS list of chemicals that induce mammary tumors in rodents downloaded from https://iris.epa.gov/AdvancedSearch/ after searching "mammary" (data file available in github)
 - EPA_OPP_MCs.xlsx: Pesticides flagged for having induced mammary tumors in cancer bioassays from Cardona and Rudel 2020 (data compiled by authors using paper results https://pubmed.ncbi.nlm.nih.gov/32645345/) (data file available in github)
 - ccris.xlsx: Chemical Carcinogenesis Research Information System archive last updated 2018, downloaded from https://www.nlm.nih.gov/databases/download/ccris.html
 - LCDB_Mammary_Carcinogens.xlsx: chemicals that induce mammary tumors recorded in the Lhasa Carcinogenicity Database, recorded manually from searching https://carcdb.lhasalimited.org/ (data file available in github)
