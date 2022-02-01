@@ -111,7 +111,7 @@ Hormonesynth <- full_join(H295R_onedose, H295R_CR, by = "CASRN") %>%
                                     is.na(E2_onedose_up) == TRUE & is.na(E2_CR_up) == TRUE ~ "-",
                                     TRUE ~ "negative")) 
 
-#write.csv(Hormonesynth, "./outputs/H295R_hormonesynthesis_summary.csv", row.names = FALSE)
+write.csv(Hormonesynth, "./outputs/H295R_hormonesynthesis_summary.csv", row.names = FALSE)
 
 
 
@@ -126,7 +126,7 @@ ERagonist <- read_excel("./inputs/Judson_toxsci-15-0258-File002.xlsx") %>%
                                 TRUE ~ "not_agonist")) %>% 
   select(CASRN, Name, ERactivity)
 
-#write.csv(ERagonist, "./outputs/ERagonists.csv", row.names = FALSE)
+write.csv(ERagonist, "./outputs/ERagonists.csv", row.names = FALSE)
     
 
 
@@ -171,7 +171,7 @@ BCrelList <- full_join(MCList, Hormonesynth, by = "CASRN") %>%
   unique()
 
 
-#write.csv(BCrelList, "./outputs/BCRelList.csv", row.names = FALSE)
+write.csv(BCrelList, "./outputs/BCRelList.csv", row.names = FALSE)
 
 
 
@@ -188,19 +188,18 @@ EDC_gentox <- BCrelList %>%
                               ERactivity == "agonist", "Potent", "-")) %>% 
   select(CASRN:ERactivity, Potent_EDC, Genotoxicity)
 
-#write.csv(EDC_gentox, "./outputs/EDC_gentox.csv", row.names = FALSE)
+write.csv(EDC_gentox, "./outputs/EDC_gentox.csv", row.names = FALSE)
 
 
-# May be of interest for some people to know which chemicals are steroidogenic, ER agonistic, and genotoxic
-# Hormone_ER_and_gentox <- BCrelList %>% 
-#   mutate(Hormone_ER = ifelse(HormoneSummary != "-" & HormoneSummary != "negative" &
-#                                ERactivity != "-" & ERactivity != "not_agonist",
-#                              "Both", "-")) %>% 
-#   filter(Hormone_ER == "Both") %>% 
-#   filter(Genotoxicity == "positive") %>% 
-#   select(CASRN:ERactivity, Hormone_ER, Genotoxicity)
-#   
-# #write.csv(Hormone_ER_and_gentox, "./outputs/Hormone_ER_and_gentox.csv", row.names = FALSE)
+Hormone_ER_and_gentox <- BCrelList %>% 
+   mutate(Hormone_ER = ifelse(HormoneSummary != "-" & HormoneSummary != "negative" &
+                                ERactivity != "-" & ERactivity != "not_agonist",
+                              "Both", "-")) %>% 
+   filter(Hormone_ER == "Both") %>% 
+   filter(Genotoxicity == "positive") %>% 
+   select(CASRN:ERactivity, Hormone_ER, Genotoxicity)
+   
+write.csv(Hormone_ER_and_gentox, "./outputs/Hormone_ER_and_gentox.csv", row.names = FALSE)
 
 
 

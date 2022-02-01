@@ -256,7 +256,7 @@ ExposureSources <- full_join(CPDat_exposures, ExpoCast, by = "DTXSID") %>%
   
   select(CASRN:chem_name, Consumer:Industrial, Environmental_media, HPV, U95intake)
 
-#(ExposureSources, "./outputs/ExposureSources.csv", row.names = FALSE)
+write.csv(ExposureSources, "./outputs/ExposureSources.csv", row.names = FALSE)
 
 
 
@@ -311,7 +311,6 @@ P65 <- full_join(P65_Cancer, P65_Dev, by = "CASRN") %>%
 
 
 ####### Complete list of BC-Relevant exposures, effects, sources and Prop 65 listing #######
-
 BCrel_Effects_and_Sources <- left_join(BCrelList, ExposureSources, by = "CASRN") %>% 
   left_join(P65, by = "CASRN") %>% 
   mutate(DTXSID = coalesce(DTXSID.x, DTXSID.y)) %>% 
@@ -329,7 +328,7 @@ BCrel_Effects_and_Sources <- left_join(BCrelList, ExposureSources, by = "CASRN")
   unique()
 
 
-#write.csv(BCrel_Effects_and_Sources, "./outputs/BCrel_Effects_and_Sources.csv", row.names = FALSE)
+write.csv(BCrel_Effects_and_Sources, "./outputs/BCrel_Effects_and_Sources.csv", row.names = FALSE)
 
 
 
@@ -346,7 +345,7 @@ BCRel_gentoxEDC_highexp <- BCrel_Effects_and_Sources %>%
   filter(Genotoxicity == "positive") %>% 
   filter(U95intake == "100 ug/kg/day or more") 
 
-#write.csv(BCRel_gentoxEDC_highexp, "./outputs/BCRel_gentoxEDC_highexp.csv", row.names = FALSE)
+write.csv(BCRel_gentoxEDC_highexp, "./outputs/BCRel_gentoxEDC_highexp.csv", row.names = FALSE)
 
 
 
@@ -356,7 +355,7 @@ BCrelFDA <- BCrel_Effects_and_Sources %>%
   filter(is.na(Pharma)==FALSE) %>% 
   filter(Pharma != "Pharma_cp")
 
-#write.csv(BCrelFDA, "./outputs/BCrel_FDAdrugs.csv", row.names = FALSE)
+write.csv(BCrelFDA, "./outputs/BCrel_FDAdrugs.csv", row.names = FALSE)
 
 
 
@@ -377,7 +376,7 @@ MC_notP65 <- BCrel_Effects_and_Sources %>%
   filter(str_detect(chem_name, "Aroclor") == FALSE) %>%
   subset(select = -c(E2_onedose_up:P4_CR_up))
 
-#write.csv(MC_notP65, "./outputs/MCs_not_Prop65_carcinogens.csv", row.names = FALSE)
+write.csv(MC_notP65, "./outputs/MCs_not_Prop65_carcinogens.csv", row.names = FALSE)
 
 
 
