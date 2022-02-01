@@ -1,19 +1,16 @@
 # AUTHOR: Jenny Kay
 # PURPOSE: compiling references showing mammary tumor induction by chemicals in vivo
-# last update: 2022-01-21
+# last update: 2022-02-01
 # written in version: R version 4.1.0 (2021-05-18)
 
 
 library(tidyverse)
 library(readxl)
 
-# This assigns the folder where the R script lives to workingdir
+# Assign the folder where the R script lives to working directory
 workingdir <- dirname(rstudioapi::getActiveDocumentContext()$path)
-# This sets the working directory to workingdir
 setwd(workingdir)
 
-
-getwd()
 options(stringsAsFactors = FALSE)
 
 # create outputs folder
