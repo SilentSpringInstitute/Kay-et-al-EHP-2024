@@ -45,9 +45,9 @@ IARC <- read_excel("./inputs/IARCmonoMCchems.xlsx") %>%
   select(CASRN, DTXSID, Chemname, IARC_result) 
 
 
-#### 14th Report on Carcinogens ####
+#### 15th Report on Carcinogens ####
 # ROC pdfs downloaded from https://ntp.niehs.nih.gov/whatwestudy/assessments/cancer/roc/index.html
-# Results from the 14th ROC were gathered by searching pdfs for the term "mammary,"
+# Results from the 15th ROC were gathered by searching pdfs for the term "mammary,"
 #    then looking at results for tumors in experimental animals and including the chemical 
 #    if there was at least one study showing significant induction of mammary tumors
 ROC15 <- read_excel("./inputs/ROC15_ChemswithMC.xlsx") %>% 
