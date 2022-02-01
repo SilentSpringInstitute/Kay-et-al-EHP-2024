@@ -8,11 +8,9 @@
 library(tidyverse)
 library(readxl)
 
-# This assigns the folder where the R script lives to workingdir
+# Assign the folder where the R script lives to working directory
 workingdir <- dirname(rstudioapi::getActiveDocumentContext()$path)
-# This sets the working directory to workingdir
 setwd(workingdir)
-
 
 options(stringsAsFactors = FALSE)
 
