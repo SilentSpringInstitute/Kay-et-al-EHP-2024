@@ -7,13 +7,10 @@ library(tidyverse)
 library(readxl)
 library(stringr)
 
-# This assigns the folder where the R script lives to workingdir
+# Assign the folder where the R script lives to working directory
 workingdir <- dirname(rstudioapi::getActiveDocumentContext()$path)
-# This sets the working directory to workingdir
 setwd(workingdir)
 
-
-getwd()
 options(stringsAsFactors = FALSE)
 
 options(scipen=999)
@@ -377,6 +374,4 @@ MC_notP65 <- BCrel_Effects_and_Sources %>%
   subset(select = -c(E2_onedose_up:P4_CR_up))
 
 write.csv(MC_notP65, "./outputs/MCs_not_Prop65_carcinogens.csv", row.names = FALSE)
-
-
 
