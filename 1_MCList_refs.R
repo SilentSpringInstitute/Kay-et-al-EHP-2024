@@ -33,13 +33,12 @@ chemids <- read.csv("./inputs/DSSTox_Identifiers_and_CASRN_2021r1.csv") %>%
 #    so they were assigned X and Y, respectively
 
 IARC <- read_excel("./inputs/IARCmonoMCchems.xlsx") %>% 
-  select(CASRN, Chemname, DTXSID) %>% 
+  select(CASRN, Chemname) %>% 
   # fix CASRN synonym w/ another chem on list
   mutate(CASRN = case_when(Chemname == "Trans-2-[(dimethylamino)methylimino]-5-[2-(5-nitro-2-furyl)vinyl]-1,3,4-oxadiazole"
                            ~ "55738-54-0", 
                            TRUE ~ CASRN)) %>% 
   left_join(chemids, by = "CASRN") %>% 
-  mutate(DTXSID = coalesce(DTXSID.y, DTXSID.x)) %>% 
   mutate(Chemname = coalesce(preferred_name, Chemname)) %>% 
   mutate(IARC_result = "IARC") %>%
   select(CASRN, DTXSID, Chemname, IARC_result) 
