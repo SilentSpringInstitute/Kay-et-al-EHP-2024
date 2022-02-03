@@ -30,7 +30,7 @@ chemids <- read.csv("./inputs/DSSTox_Identifiers_and_CASRN_2021r1.csv") %>%
 # Downloaded NCI's Chemical Carcinogenesis Research Information System archive from 
 #     https://www.nlm.nih.gov/databases/download/ccris.html
 ccris <- read_excel("./inputs/ccris.xlsx", col_names = FALSE)
-len_ccris <- ncol(ccris) # you can't use name of function to name a variable
+len_ccris <- ncol(ccris) 
 
 # Full CCRIS download contains a junk row at the top - assign column names as second row
 colnames(ccris) <- ccris[2,] 
