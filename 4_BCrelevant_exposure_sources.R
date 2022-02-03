@@ -363,7 +363,7 @@ MC_notP65 <- BCrel_Effects_and_Sources %>%
   #find chems listed by authoritative bodies (ABs) recognized by OEHHA
   filter(str_detect(MC_references, "IARC|EPA|NTP|ROC15")) %>% 
   #remove ionizing radiation, 4'OH-PCB-61, and things where the AB dismissed or found equivocal evidence for MC
-  filter(str_detect(chem_name, "malachite|Terbutylazine|Clonitralid|4'OH")==FALSE) %>% 
+  filter(str_detect(chem_name, "alachite|Terbutylazine|Clonitralid|4'OH")==FALSE) %>% 
   filter(str_detect(chem_name, "Chloroacetophenone|Triclopyr|3-Iodo")==FALSE) %>% 
   filter(str_detect(chem_name, "Pentachlorodibenzofuran|Cyfluthrin|stilbenedisulfonic")==FALSE) %>% 
   filter(str_detect(chem_name, "Ametryn|Isoeugenol|Ionizing")==FALSE) %>% 
