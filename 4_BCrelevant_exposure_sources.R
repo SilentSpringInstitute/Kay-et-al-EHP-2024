@@ -1,6 +1,8 @@
-# J. Kay script for spreadsheet of chemical use categories from 
-#     2021 BC-relevant list (Expocast, cpdat, FDA)
-# updated 5/26/21
+# AUTHOR: Jenny Kay
+# PURPOSE: Identify chemical use categories and exposure data for BC-relevant chemicals 
+#          from CPDat, ExpoCast, FDA, and EPA database
+# STARTED: 2021-05-26
+# written in version: R version 4.1.0 (2021-05-18)
 
 
 library(tidyverse)
@@ -12,7 +14,6 @@ workingdir <- dirname(rstudioapi::getActiveDocumentContext()$path)
 setwd(workingdir)
 
 options(stringsAsFactors = FALSE)
-
 options(scipen=999)
 
 
@@ -100,7 +101,10 @@ ExpoCast <- read.table("./inputs/Ring_SupTable-all.chem.preds-2018-11-28.txt", h
   mutate(Diet_exp = ifelse(grepl('Diet', Diet_exp, fixed = TRUE), 'Diet_exp', Diet_exp))%>%
   mutate(Pesticide_exp = ifelse(grepl('Pesticide', Pesticide_exp, fixed = TRUE), 'Pesticide_exp',Pesticide_exp))%>%
   mutate(Industrial_exp = ifelse(grepl('Industrial', Industrial_exp, fixed = TRUE), 'Industrial_exp', Industrial_exp)) %>%
-  mutate(Unknown = ifelse(grepl('Unknown', Unknown, fixed = TRUE), 'Unknown_exp', Unknown))
+  mutate(Unknown = ifelse(grepl('Unknown', Unknown, fixed = TRUE), 'Unknown_exp', Unknown)) %>%
+  mutate(U95intake = case_when(U95intake >= 0.1 ~ "100 ug/kg/day or more", 
+                               U95intake < 0.1 & U95intake >= 0.001 ~ "Between 1 to 100 ug/kg/day",
+                               U95intake < 0.001 ~ "Less than 1 ug/kg/day")) 
 
 
 
@@ -215,12 +219,11 @@ EPA_pesticides <- full_join(pesticides, antimicrobial, by = "CASRN") %>%
 ####### Complete exposure sources #######
 
 # Join, condense, and organize all exposure sources
-ExposureSources <- full_join(CPDat_exposures, ExpoCast, by = "DTXSID") %>% 
-  left_join(chemids, by = "DTXSID") %>% 
+ExposureSources <- full_join(CPDat_exposures, ExpoCast, by = "CASRN") %>% 
+  left_join(chemids, by = "CASRN") %>% 
   full_join(HPV, by = "CASRN") %>% 
-  mutate(CASRN = coalesce(CASRN, CASRN.y, CASRN.x)) %>% 
+  mutate(DTXSID = coalesce(DTXSID.x, DTXSID.y, DTXSID.x.x, DTXSID.y.y)) %>% 
   mutate(chem_name = coalesce(preferred_name.x, preferred_name.y, PREFERRED_NAME)) %>% 
-  mutate(DTXSID = coalesce(DTXSID.x, DTXSID.y)) %>% 
   select(CASRN, DTXSID, chem_name, Pesticide_cp:Pharma_cp, Pesticide_exp:Industrial_exp, HPV, U95intake) %>% 
   full_join(FDA, by = "CASRN") %>% 
   full_join(EAFUS, by = "CASRN") %>% 
@@ -318,9 +321,6 @@ BCrel_Effects_and_Sources <- left_join(BCrelList, ExposureSources, by = "CASRN")
                             chem_name == "Trp-P-2" | chem_name == "Morin hydrate" |
                             chem_name == "Enterolactone" ~ "Diet_naturally_occurring",
                           TRUE ~ Diet)) %>% 
-  mutate(U95intake = case_when(U95intake >= 0.1 ~ "100 ug/kg/day or more", 
-                               U95intake < 0.1 & U95intake >= 0.001 ~ "Between 1 to 100 ug/kg/day",
-                               U95intake < 0.001 ~ "Less than 1 ug/kg/day")) %>% 
   select(CASRN, DTXSID, chem_name, MC, MC_references, E2_onedose_up:Genotoxicity, Consumer:Prop65) %>% 
   unique()
 
