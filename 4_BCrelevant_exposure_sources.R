@@ -356,21 +356,16 @@ write.csv(BCrelFDA, "./outputs/BCrel_FDAdrugs.csv", row.names = FALSE)
 
 
 
-### MCs listed by NTP, EPA or IARC not on Prop 65
+### MCs not on Prop 65 list
 MC_notP65 <- BCrel_Effects_and_Sources %>% 
-  filter(is.na(Prop65)==TRUE) %>% 
+  filter(grepl("Cancer", Prop65, fixed = TRUE) == FALSE) %>% 
   filter(MC == "MC") %>% 
-  #find chems listed by authoritative bodies (ABs) recognized by OEHHA
-  filter(str_detect(MC_references, "IARC|EPA|NTP|ROC15")) %>% 
-  #remove ionizing radiation, 4'OH-PCB-61, and things where the AB dismissed or found equivocal evidence for MC
-  filter(str_detect(chem_name, "alachite|Terbutylazine|Clonitralid|4'OH")==FALSE) %>% 
-  filter(str_detect(chem_name, "Chloroacetophenone|Triclopyr|3-Iodo")==FALSE) %>% 
-  filter(str_detect(chem_name, "Pentachlorodibenzofuran|Cyfluthrin|stilbenedisulfonic")==FALSE) %>% 
-  filter(str_detect(chem_name, "Ametryn|Isoeugenol|Ionizing")==FALSE) %>% 
+  #remove ionizing radiation 
+  filter(str_detect(chem_name, "Ionizing")==FALSE) %>% 
   # remove steroidal estrogens b/c they're Prop65 listed as a group
-  filter(str_detect(chem_name, "Estriol|Ethynodiol") == FALSE) %>% 
-  # remove Aroclor 1254 b/c Prop65 lists PCBs as a group
-  filter(str_detect(chem_name, "Aroclor") == FALSE) %>%
+  filter(str_detect(chem_name, "Estradiol|Estriol|Norlestrin") == FALSE) %>% 
+  # remove Aroclor 1254 and 4'OH-PCB-61 b/c Prop65 lists PCBs as a group
+  filter(str_detect(chem_name, "Aroclor|4'OH") == FALSE) %>%
   subset(select = -c(E2_onedose_up:P4_CR_up))
 
 write.csv(MC_notP65, "./outputs/MCs_not_Prop65_carcinogens.csv", row.names = FALSE)
