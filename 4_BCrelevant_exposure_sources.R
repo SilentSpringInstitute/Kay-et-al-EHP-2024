@@ -322,6 +322,7 @@ BCrel_Effects_and_Sources <- left_join(BCrelList, ExposureSources, by = "CASRN")
                             chem_name == "Enterolactone" ~ "Diet_naturally_occurring",
                           TRUE ~ Diet)) %>% 
   select(CASRN, DTXSID, chem_name, MC, MC_references, E2_onedose_up:Genotoxicity, Consumer:Prop65) %>% 
+  mutate(across(.cols = MC:Prop65, .fns = str_replace_na, replacement = "-")) %>% 
   unique()
 
 
@@ -349,7 +350,7 @@ write.csv(BCRel_gentoxEDC_highexp, "./outputs/BCRel_gentoxEDC_highexp.csv", row.
 ### FDA drugs, w/ KC summaries
 BCrelFDA <- BCrel_Effects_and_Sources %>% 
   select(CASRN:MC, HormoneSummary, ERactivity, Genotoxicity, Pharma) %>% 
-  filter(is.na(Pharma)==FALSE) %>% 
+  filter(Pharma != "-") %>%
   filter(Pharma != "Pharma_cp")
 
 write.csv(BCrelFDA, "./outputs/BCrel_FDAdrugs.csv", row.names = FALSE)
