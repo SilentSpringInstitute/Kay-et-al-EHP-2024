@@ -136,13 +136,13 @@ echemportal <- read_excel("./inputs/eChemPortalAPI_GeneticToxicityVivo_FinalReco
   rename(CASRN = Number) %>% 
   filter(`Number Type` == "CAS Number") %>% # remove things with only IUPAC names
   mutate(Genotoxicity = case_when(grepl('quivocal', Genotoxicity, fixed = TRUE) | 
-                                    grepl('mbiguous', Genotoxicity, fixed = TRUE) |
                                     grepl('mbiguous', Genotoxicity, fixed = TRUE) ~ "-",
+                                  
+                                  grepl('egative', Genotoxicity, fixed = TRUE) ~ "negative",
                                   
                                   grepl('ositive', Genotoxicity, fixed = TRUE) ~ "positive",
                                   grepl('ignificant increase', Genotoxicity, fixed = TRUE) ~ "positive",
-                                  
-                                  grepl('egative', Genotoxicity, fixed = TRUE) ~ "negative",
+
                                   TRUE ~ "-")) %>% 
   filter(Genotoxicity != "-") %>% 
   select(CASRN, Name, Genotoxicity) %>% 
