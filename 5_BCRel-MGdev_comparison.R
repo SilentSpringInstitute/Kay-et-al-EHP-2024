@@ -3,7 +3,7 @@
 # STARTED: 2021-05-19
 # written in version: R version 4.1.0 (2021-05-18)
 
-# Updated 2/1/2022
+# Last update: 2022-07-26
 
 library(tidyverse)
 library(readxl)
@@ -24,7 +24,7 @@ chemids <- read.csv("./inputs/DSSTox_Identifiers_and_CASRN_2021r1.csv") %>%
 
 
 # BC-relevant chemicals created in 3_BCrelevant_chem_effects.R
-BCrelList <- read.csv("./outputs/BCRelList.csv") %>% 
+BCrelList2 <- read.csv("./outputs/BCRelList.csv") %>% 
   mutate(BCrelevant = "BCrelevant") 
 
 
@@ -39,44 +39,42 @@ MGdevList <- read_excel("./inputs/MGDevlist_chemsonly.xlsx") %>%
 # Read in full hormone synth, ERagonist, and gentox results to match w/ MG devs
 gentox_chems <- read.csv("./outputs/gentox_ccris_ecvam_ntp_echem_toxnet.csv")
 
-HormoneSummary <- read.csv("./outputs/H295R_hormonesynthesis_summary.csv")
+Hormonesynth <- read.csv("./outputs/H295R_hormonesynthesis_summary.csv")
 
 ERagonist <- read.csv("./outputs/ERagonists.csv")
 
 
 # Get gentox, hormone synth, and ER activity of MG dev chemicals
 MGdev_KCs <- MGdevList %>% 
-  left_join(HormoneSummary, by = "CASRN") %>% 
+  left_join(Hormonesynth, by = "CASRN") %>% 
   left_join(ERagonist, by = "CASRN") %>% 
   left_join(gentox_chems, by = "CASRN") %>% 
-  select(CASRN:preferred_name.x, HormoneSummary, ERactivity, Genotoxicity)
+  mutate(across(.cols = HormoneSummary:Genotoxicity, .fns = str_replace_na, replacement = "-")) %>%
+  
+  mutate(EDC = case_when(str_detect(HormoneSummary, "-|NA") & ERactivity == "-" ~ "-",
+                         str_detect(HormoneSummary, "negative|-") & str_detect(ERactivity, "not|-|antag") ~ "EDC-",
+                         (str_detect(HormoneSummary, "negative|-|NA") | HormoneSummary == "*E2" | 
+                            HormoneSummary == "*P4" | HormoneSummary == "*E2, *P4") & 
+                           str_detect(ERactivity, "not|-|weak") ~ "EDC~",
+                         TRUE ~ "EDC+")) %>% 
+
+  select(CASRN:preferred_name.x, HormoneSummary, ERactivity, EDC, Genotoxicity)
 
 
 BCrelMGDev_comp <- MGdev_KCs %>% 
   mutate(MGDev = "MGDev") %>% 
-  full_join(BCrelList, by = "CASRN") %>% 
-  mutate(chem_name = coalesce(preferred_name.x, chem_name)) %>% 
+  full_join(BCrelList2, by = "CASRN") %>% 
+  mutate(preferred_name = coalesce(preferred_name.x, preferred_name)) %>% 
   mutate(DTXSID = coalesce(DTXSID.x, DTXSID)) %>% 
   mutate(HormoneSummary = coalesce(HormoneSummary.y, HormoneSummary.y)) %>% 
   mutate(ERactivity = coalesce(ERactivity.x, ERactivity.y)) %>% 
+  mutate(EDC = coalesce(EDC.x, EDC.y)) %>%
   mutate(Genotoxicity = coalesce(Genotoxicity.x, Genotoxicity.y)) %>% 
-  select(CASRN, DTXSID, chem_name:MC_references, BCrelevant, MGDev, HormoneSummary:Genotoxicity) %>% 
-  mutate(BCrelevant = ifelse(is.na(BCrelevant)== TRUE, '-', BCrelevant)) %>% 
-  mutate(MC = ifelse(is.na(MC)== TRUE, '-', MC)) %>% 
-  mutate(MC_references = ifelse(is.na(MC_references)== TRUE, '-', MC_references)) %>% 
-  mutate(MGDev = ifelse(is.na(MGDev)== TRUE, '-', MGDev)) %>% 
-  mutate(HormoneSummary = ifelse(is.na(HormoneSummary)== TRUE, '-', HormoneSummary)) %>%
-  mutate(ERactivity = ifelse(is.na(ERactivity)== TRUE, '-', ERactivity)) %>% 
-  mutate(Genotoxicity = ifelse(is.na(Genotoxicity)== TRUE, '-', Genotoxicity)) %>% 
-  unique()
-
-
-MGdevonly <- BCrelMGDev_comp %>% 
-  filter(MGDev == "MGDev") %>%
-  mutate(EDC = ifelse(
-    (HormoneSummary != "negative" & HormoneSummary != "-") |
-      (ERactivity != "not_agonist" & ERactivity != "-"), "EDC", "-"
-  )) 
+  select(CASRN, DTXSID, preferred_name:MC_references, BCrelevant, MGDev, E2_onedose_up:P4_CR_up, HormoneSummary:Genotoxicity) %>% 
+  mutate(across(.cols = MC:Genotoxicity, .fns = str_replace_na, replacement = "-")) %>% 
+  filter(MGDev == "MGDev") 
+    
   
 
-write.csv(MGdevonly, "./outputs/BCrel_MGdev_comparison.csv", row.names = FALSE)
+write_csv(BCrelMGDev_comp, "./outputs/BCrel_MGdev_comparison.csv")
+

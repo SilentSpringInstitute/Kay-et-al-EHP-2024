@@ -3,6 +3,7 @@
 #           These were the sources used to construct the 2021 version of EPA's ToxValDB,
 #           excluding COSMOS because COSMOS database has a ton of errors
 # STARTED: 2021-07-01
+# Last update: 2022-07-26
 # written in version: R version 4.1.0 (2021-05-18)
 
 library(tidyverse)
@@ -16,7 +17,8 @@ options(stringsAsFactors = FALSE)
 
 
 
-# glossary matching CASRNs to DTXSIDs and chem names
+# glossary matching CASRNs to DTXSIDs and chem names (this will already be in 
+#     your environment if following from 1_MCList_refs.R)
 # downloaded from CompTox Dashboard https://clowder.edap-cluster.com/datasets/61147fefe4b0856fdc65639b?space=6112f2bee4b01a90a3fa7689#folderId=616dd716e4b0a5ca8aeea68e&page=0
 chemids <- read.csv("./inputs/DSSTox_Identifiers_and_CASRN_2021r1.csv") %>%
   rename(CASRN = casrn, DTXSID = dtxsid, preferred_name = preferredName) %>% 
@@ -30,7 +32,7 @@ chemids <- read.csv("./inputs/DSSTox_Identifiers_and_CASRN_2021r1.csv") %>%
 # Downloaded NCI's Chemical Carcinogenesis Research Information System archive from 
 #     https://www.nlm.nih.gov/databases/download/ccris.html
 ccris <- read_excel("./inputs/ccris.xlsx", col_names = FALSE)
-len_ccris <- ncol(ccris) 
+len_ccris <- ncol(ccris)
 
 # Full CCRIS download contains a junk row at the top - assign column names as second row
 colnames(ccris) <- ccris[2,] 
@@ -60,13 +62,11 @@ ccrisgentox <- ccris[-c(1,2),] %>% # Remove junk rows
 
 
 
-
-
 ##### ECVAM #####
 # ECVAM "positive Ames results" database, Reference Corvi 2018
 #     Download from http://data.europa.eu/89h/jrc-eurl-ecvam-genotoxicity-carcinogenicity-ames
-#     Due to structure of excel file with filtered and grouped columns, had to remove first row
-#     Full download also included in "inputs" for reference, but not used in code
+#     R can't read excel file with filtered and grouped columns, so had to 
+#     remove first row. Full download also included in "inputs" for reference, but not used in code
 
 ECVAM_amespos <- read_excel("./inputs/ECVAM_Ames_positives_DB_row1removed.xls") %>% 
   rename(CASRN = `CAS No. cleaned`, invitropos = `invitro+`, invitroneg = `invitro-`, 
@@ -114,6 +114,7 @@ ECVAMoverall <- ECVAM_amespos %>%
 ##### NTP #####
 # NTP CEBS gentox results available at DOI: 10.22427/NTP-DATA-022-00002-0002-000-8 
 #     and https://cebs.niehs.nih.gov/datasets/search/trf
+#     version updated 3/5/2020
 NTP_gentox <- read_excel("./inputs/NTP_Gentox_andother_Findings_Data_2020-03-05.xlsx") %>% 
   select(CASRN, `Chemical Name`, `Bacterial Mutagenicity Conclusion`, 
          `Male Rat Micronucleus Conclusion`:`Female Mouse Comet Assay Conclusion`) %>%  
@@ -132,9 +133,11 @@ NTP_gentox <- read_excel("./inputs/NTP_Gentox_andother_Findings_Data_2020-03-05.
 ##### eChemPortal #####
 # eChemPortal genotoxicity database provided by Richard Judson at US EPA ftp 
 #     (https://gaftp.epa.gov/Comptox/Staff/rjudson/datasets/genetox/)
+#     latest version, dated and downloaded 7/6/2021
 echemportal <- read_excel("./inputs/eChemPortalAPI_GeneticToxicityVivo_FinalRecords.xlsx") %>% 
   rename(CASRN = Number) %>% 
   filter(`Number Type` == "CAS Number") %>% # remove things with only IUPAC names
+  select(CASRN, Name, Genotoxicity) %>% 
   mutate(Genotoxicity = case_when(grepl('quivocal', Genotoxicity, fixed = TRUE) | 
                                     grepl('mbiguous', Genotoxicity, fixed = TRUE) ~ "-",
                                   
@@ -142,10 +145,9 @@ echemportal <- read_excel("./inputs/eChemPortalAPI_GeneticToxicityVivo_FinalReco
                                   
                                   grepl('ositive', Genotoxicity, fixed = TRUE) ~ "positive",
                                   grepl('ignificant increase', Genotoxicity, fixed = TRUE) ~ "positive",
-
+                                  
                                   TRUE ~ "-")) %>% 
   filter(Genotoxicity != "-") %>% 
-  select(CASRN, Name, Genotoxicity) %>% 
   unique() %>% 
   pivot_wider(names_from = Genotoxicity, values_from = Genotoxicity) %>% 
   mutate(echemgentox = coalesce(positive, negative)) 
@@ -154,10 +156,11 @@ echemportal <- read_excel("./inputs/eChemPortalAPI_GeneticToxicityVivo_FinalReco
 
 
 ###### GENE-TOX #####
-# NLM TOXNET's GENE-TOX database files
+# NLM TOXNET's GENE-TOX database files, downloaded 7/6/2021
 #    Downloaded at https://www.ncbi.nlm.nih.gov/pcsubstance?term=%22Genetic%20Toxicology%20Data%20Bank%20(GENE-TOX)%22%5BSourceName%5D%20AND%20hasnohold%5Bfilt%5D
 toxnet_gentox_IDs <- read_excel("./inputs/NLM_TOXNET_GENETOX_Substance.xlsx") # key of substance IDs, given as "NLM_TOXNET_GENETOX_n"
-toxnet_gentox_results <- read_tsv("./inputs/NLM_TOXNET_GENTOX_results.txt", col_names = c("IDs", "results"), quote = "", skip = 2) %>% 
+toxnet_gentox_results <- read_tsv("./inputs/NLM_TOXNET_GENTOX_results.txt", # results for each chem ID "NLM_TOXNET_GENETOX_n"
+                                  col_names = c("IDs", "results"), quote = "") %>% 
   filter(IDs != "END") 
 
 v_asta = NULL
@@ -165,42 +168,27 @@ v_resa = NULL
 SOURCE_NAME_SID = NULL
 flag_resa = 0
 flag_asta = 0
-SOURCE_NAME_SID = c("NLM_TOXNET_GENETOX_1")
-
 
 for (i in seq(1:dim(toxnet_gentox_results)[1])){
   value_test = toxnet_gentox_results[i, 1]
-  if(grepl('NLM_TOXNET_GENETOX', value_test, fixed = TRUE)){
-    SOURCE_NAME_SID = append(SOURCE_NAME_SID, value_test)
-    if(length(SOURCE_NAME_SID) != 1){
-      if(flag_resa == 1){
-        v_resa = append(v_resa, resa)
-      }else{
-        v_resa = append(v_resa, "NA")
-      }
-      if(flag_asta == 1){
-        v_asta = append(v_asta, asta)
-      }else{
-        v_asta = append(v_asta, "NA")
-      }
-      flag_resa = 0
-      flag_asta = 0
-    }
-  }
+  if(grepl('NLM_TOXNET_GENETOX', value_test, fixed = TRUE)
+  ){SOURCE_NAME_SID = append(SOURCE_NAME_SID, value_test)
+  if(length(SOURCE_NAME_SID) != 1){
+  if(flag_resa == 1){v_resa = append(v_resa, resa)}
+  else{v_resa = append(v_resa, "NA")}
+  if(flag_asta == 1){v_asta = append(v_asta, asta)}
+  else{v_asta = append(v_asta, "NA")}
+  flag_resa = 0
+  flag_asta = 0}}
   
   if(toxnet_gentox_results[i, 1] == "asta"){
     asta = toxnet_gentox_results[i,2]
-    flag_asta = 1
-  }
+  flag_asta = 1}
   
   if(toxnet_gentox_results[i, 1] == "resa"){
     resa = toxnet_gentox_results[i,2]
-    flag_resa = 1
+  flag_resa = 1}
   }
-}
-
-## asta and resa not working and not define
-
 v_asta = append(v_asta, asta)
 v_resa = append(v_resa, resa)
 
@@ -249,5 +237,5 @@ gentox_ccris_ecvam_ntp_echem_toxnet <- ECVAMoverall %>%
   unique()
 
 
-write.csv(gentox_ccris_ecvam_ntp_echem_toxnet, "./outputs/gentox_ccris_ecvam_ntp_echem_toxnet.csv", row.names = FALSE)
+write_csv(gentox_ccris_ecvam_ntp_echem_toxnet, "./outputs/gentox_ccris_ecvam_ntp_echem_toxnet.csv")
 

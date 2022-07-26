@@ -1,20 +1,24 @@
 # AUTHOR: Jenny Kay
 # PURPOSE: compiling references showing mammary tumor induction by chemicals in vivo
-# last update: 2022-02-01
+# last update: 2022-07-26
 # written in version: R version 4.1.0 (2021-05-18)
 
 
 library(tidyverse)
 library(readxl)
+library(stringr)
 
 # Assign the folder where the R script lives to working directory
 workingdir <- dirname(rstudioapi::getActiveDocumentContext()$path)
 setwd(workingdir)
 
+
 options(stringsAsFactors = FALSE)
 
-# create outputs folder
-dir.create(paste(workingdir, "/outputs/", sep = ""))
+
+#create folder for code outputs. This folder will be used in each subsequent script
+dir.create("./outputs")
+
 
 ## glossary matching CASRNs to DTXSIDs and chem names
 # downloaded from CompTox Dashboard https://clowder.edap-cluster.com/datasets/61147fefe4b0856fdc65639b?space=6112f2bee4b01a90a3fa7689#folderId=616dd716e4b0a5ca8aeea68e&page=0
@@ -50,24 +54,23 @@ IARC <- read_excel("./inputs/IARCmonoMCchems.xlsx") %>%
 #    then looking at results for tumors in experimental animals and including the chemical 
 #    if there was at least one study showing significant induction of mammary tumors
 ROC15 <- read_excel("./inputs/ROC15_ChemswithMC.xlsx") %>% 
-  mutate(ROC15_result = "ROC15") %>% 
+  mutate(ROC15_result = ifelse(Call == "equivocal", "ROC15_equivocal", "ROC15")) %>% 
   select(CASRN, Chemname, ROC15_result)
 
 
 #### NTP technical reports ####
 
 #Downloaded results of cancer bioassays from NTP's Chemical Effects on Biological Systems database 
-#     https://manticore.niehs.nih.gov/organsites on Jan 21 2022
+#     https://manticore.niehs.nih.gov/organsites on July 7 2022
 
-NTP_CEBS <- read_tsv("./inputs/NTPCEBS_2022-01-21-site_data.tsv") %>% 
-  # The raw download's column names clearly all messed up... 
-  #    renamed columns of interest to review results 
-  rename(CASRN = `Publication No.`, tumorsite = CASRN, tumortype = `Test Article No.`, 
-         NTP_result = `Testing Status URL`, sex = `Study No.`, species = Sex, chemname = `Finding Type`) %>% 
-  filter(tumorsite == "Mammary Gland") %>% 
+NTP_CEBS <- read_tsv("./inputs/NTPCEBS_2022-07-07-site_data.tsv") %>% 
+  rename(chemname = `Test Article Name`, NTP_result = `Organ Site Call`) %>%
+  filter(Organ == "Mammary Gland") %>% 
+  #combo of urethane and ethanol not a distinct exposure
+  filter(CASRN != "URETHCOMB") %>% 
   # select only columns needed for constructing MC list
   select(CASRN, chemname, NTP_result) %>% 
-  mutate(NTP_result = case_when(str_detect(NTP_result, 'quiv') ~ "NTP_equivocal",
+  mutate(NTP_result = case_when(str_detect(NTP_result, 'Equiv') ~ "NTP_equivocal",
                                 str_detect(NTP_result, 'ositive|lear|ome') ~ "NTP",
                                 TRUE ~ "check")) %>% 
   pivot_wider(names_from = "NTP_result", values_from = "NTP_result") %>% 
@@ -78,19 +81,22 @@ NTP_CEBS <- read_tsv("./inputs/NTPCEBS_2022-01-21-site_data.tsv") %>%
   unique()
 
 # Leucomalachite green, PeCDF, and amsonic acid were previously flagged as having 
-#    legitimate mammary tumor induction dismissed in NTP bioassays 
+#    legitimate mammary tumor induction dismissed in NTP bioassays in Rudel 2007, DOI: 10.1002/cncr.22653
 #    Add to df as "NTP_dismissed"
 NTP_dismissed <- data.frame(c("129-73-7", "57117-31-4", "7336-20-1"),
-                            c("Leucomalachite green", "2,3,4,7,8-Pentachlorodibenzofuran", "4,4'-Diamino-2,2'-stilbenedisulfonic acid, disodium salt"), 
+                            c("Leucomalachite green", "2,3,4,7,8-Pentachlorodibenzofuran", 
+                              "4,4'-Diamino-2,2'-stilbenedisulfonic acid, disodium salt"), 
                             c("NTP_dismissed", "NTP_dismissed", "NTP_dismissed"))
 
 colnames(NTP_dismissed) <- c("CASRN", "chemname", "NTP_result")
+colnames <- NTP_dismissed
 
 NTP <- rbind(NTP_CEBS, NTP_dismissed)
 
 
+
 #### EPA IRIS reports ####
-# chemicals that induce mammary tumors downloaded from 
+# chemicals that induce mammary tumors downloaded Aug 20, 2021 from 
 #     https://iris.epa.gov/AdvancedSearch/ after searching "mammary"
 EPA_IRIS <- read_excel("./inputs/EPA_IRIS_MCs.xlsx") %>% 
   select(CASRN, DTXSID, `Chemical Name`) %>% 
@@ -104,6 +110,35 @@ EPA_IRIS <- read_excel("./inputs/EPA_IRIS_MCs.xlsx") %>%
 #     DOI 10.1016/j.mce.2020.110927
 EPA_OPP <- read_excel("./inputs/EPA_OPP_MCs.xlsx") %>% 
   mutate(EPA_OPP_result = ifelse(EPA_RED_result == "positive", "EPA_OPP", paste0("EPA_OPP_", EPA_RED_result)))
+
+
+
+#### ToxRefDB ####
+# EPA's Toxicity Reference Database (ToxRefDB)
+# Downloaded SQL database 6/23/22 from https://gaftp.epa.gov/comptox/High_Throughput_Screening_Data/Animal_Tox_Data/current
+#     version dated 4/21/20
+
+# From SQL database, pulled rodent cancer studies where there were treatment-related 
+#     tumors induced in the mammary gland
+ToxRef_MCs <- read.csv("./inputs/ToxRef_MCs.csv") %>% 
+  select(casrn, preferred_name) %>% 
+  rename(CASRN = casrn) %>% 
+  mutate(Toxref_result = "ToxRefDB") %>% 
+  unique()
+
+
+
+#### ToxValDB ####
+# EPA's Toxicity Value Database 
+#    provided by Richard Judson April 20, 2022 by email (file available on github)
+ToxVal_MCs <- read_excel("./inputs/toxval_cancer_details_with_references_dev_toxval_v9_2022-04-20.xlsx") %>% 
+  filter(str_detect(common_name, "Rat|Mouse") | str_detect(species_original, "rat|mice")) %>% 
+  filter(risk_assessment_class == "carcinogenicity" | risk_assessment_class == "chronic") %>% 
+  filter(str_detect(critical_effect, "mammary")) %>% 
+  rename(CASRN = casrn) %>% 
+  select(CASRN) %>%
+  mutate(ToxVal = "ToxValDB") %>% 
+  unique()
 
 
 
@@ -136,7 +171,7 @@ CCRIS_mammary <- CCRIS[-c(1,2),] %>%   # Remove junk rows
 
 
 #### Lhasa Carcinogenicity Database ####
-# LCDB, gathered from their website https://carcdb.lhasalimited.org/
+# LCDB, gathered Aug 22, 2021 from their website https://carcdb.lhasalimited.org/
 LCDB <- read_excel("./inputs/LCDB_Mammary_Carcinogens.xlsx") %>% 
   rename(CASRN = CAS_No, LCDB_Result = Result) %>% 
   # fix some CAS numbers for HCl salts - studies were duplicates
@@ -152,49 +187,44 @@ LCDB <- read_excel("./inputs/LCDB_Mammary_Carcinogens.xlsx") %>%
 
 
 
+
 ####### Complete list of MCs from sources above #########
 
-MCList_refs <- full_join(IARC, ROC15, by = "CASRN") %>% 
+MCList <- full_join(IARC, ROC15, by = "CASRN") %>% 
   full_join(NTP, by = "CASRN") %>% 
   full_join(EPA_IRIS, by = "CASRN") %>% 
   full_join(EPA_OPP, by = "CASRN") %>% 
+  full_join(ToxRef_MCs, by = "CASRN") %>% 
+  full_join(ToxVal_MCs, by = "CASRN") %>% 
   full_join(CCRIS_mammary, by = "CASRN") %>% 
   full_join(LCDB, by = "CASRN") %>% 
   left_join(chemids, by = "CASRN") %>% 
-  #Manually add in some DTXSIDs and chem names not included in chemids for some reason
-  mutate(DTXSID = case_when(CASRN == "2393-53-5" ~ "DTXSID00946752",
-                            CASRN == "82617-23-0" ~ "DTXSID801002821", 
-                            CASRN == "834-24-2" ~ "DTXSID001019381",
-                            CASRN == "87625-62-5" ~ "DTXSID20892005", 
-                            TRUE ~ DTXSID.x)) %>% 
-  mutate(preferred_name = case_when(CASRN == "2393-53-5" ~ "17-Oxoestra-1(10),2,4-trien-3-yl benzoate",
-                            CASRN == "82617-23-0" ~ "Oxiran-2-yl hydrogen carbonimidate", 
-                            CASRN == "834-24-2" ~ "4-aminostilbene",
-                            CASRN == "87625-62-5" ~ "Ptaquiloside", 
-                            CASRN == "68162-13-0" ~ "Trans-7,12-Dimethylbenz(a)anthracene-3,4-dihydrodiol",
+  rename(DTXSID = DTXSID.y.y) %>% 
+  select(-c(DTXSID.x, DTXSID.y, DTXSID.x.x)) %>% 
+  # add in some chem names not included in chemids for some reason
+  mutate(preferred_name = case_when(CASRN == "68162-13-0" ~ "Trans-7,12-Dimethylbenz(a)anthracene-3,4-dihydrodiol",
                             CASRN == "83349-67-1" ~ "Anti-1,2,3,10b-tetrahydrofluoranthene-2,3-diol 1,10b-oxide",
-                            CASRN == "843-23-2" ~ "Trans-n-hydroxy-4-acetylaminostilbene",
-                            CASRN == "1010-61-3" ~ "Trans-7,12-Dimethylbenz(a)anthracene-3,4-dihydrodiol",
-                            CASRN == "118745-11-2" ~ "N-hydroxy-n-formyl-trans-4-aminostilbene",
-                            CASRN == "118745-12-3" ~ "N-hydroxy-n-propionyl-trans-4-aminostilbene",
+                            CASRN == "1010-61-3" ~ "4-Hydroxyaminoquinoline 1-oxide hydrochloride",
                             CASRN == "75443-72-0" ~ "Anti-3,4-Dihydroxy-1,2-epoxy-1,2,3,4-tetrahydrobenzo(c)phenanthrene", 
                             CASRN == "138857-19-9" ~ "Anti-4,5-dihydroxy-6,6a-epoxy-4,5,6,6a-tetrahydrobenzo[j]fluoranthene", 
-                            CASRN == "138857-21-3" ~ "Anti-9,10-dihydroxy-11,12-epoxy-9,10,11,12-tetrahydrobenzo[j]fluoranthene", 
                             CASRN == "153926-04-6" ~ "Anti-dibenzo[a,l]pyrene-11,12-dihydrodiol-13,14-epoxide", 
-                            TRUE ~ preferred_name)) %>% 
-  mutate(DTXSID = coalesce(DTXSID, DTXSID.x, DTXSID.y, DTXSID.x.x, DTXSID.y.y)) %>% 
-  subset(select = -c(DTXSID.x, DTXSID.y, DTXSID.x.x, DTXSID.y.y)) %>% 
-  left_join(chemids, by = "DTXSID") %>% 
-  mutate(CASRN = coalesce(CASRN.y, CASRN.x)) %>% 
-  mutate(chem_name = coalesce(preferred_name.y, preferred_name.x, Chemname.x, 
-                              Chemname.y, chemname.x, chemname.y, `Chemical Name`, Preferred_name, name)) %>% 
-  unite(IARC_result, ROC15_result, NTP_result, EPA_IRIS_result, EPA_OPP_result, CCRIS_result, LCDB_Result, 
+                            TRUE ~ preferred_name.y)) %>% 
+  mutate(chem_name = coalesce(preferred_name, Chemname.x, `Chemical Name`)) %>% 
+  # fix 2,4/26-dinitrotoluene identifiers
+  mutate(CASRN = ifelse(chem_name == "2,4-/2,6-Dinitrotoluene mixture", "NOCAS_24069", CASRN)) %>% 
+  mutate(DTXSID = ifelse(chem_name == "2,4-/2,6-Dinitrotoluene mixture", "DTXSID9024069", DTXSID)) %>% 
+  mutate(MC = "MC") %>% 
+  unite(IARC_result, ROC15_result, NTP_result, EPA_IRIS_result, EPA_OPP_result, 
+        Toxref_result, ToxVal, CCRIS_result, LCDB_Result, 
         col = "MC_references", na.rm = TRUE, sep = ", ") %>% 
-  select(CASRN, DTXSID, chem_name, MC_references) %>% 
+  select(CASRN, DTXSID, chem_name, MC, MC_references) %>% 
   unique() %>% 
   arrange(CASRN)
 
 
-write.csv(MCList_refs, "./outputs/MCList_refs.csv", row.names = FALSE)
+write_csv(MCList, "./outputs/MCList_refs.csv")
+
+
+
 
 
