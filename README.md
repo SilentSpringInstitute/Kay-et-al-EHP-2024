@@ -13,6 +13,7 @@
 ### Input files
 Input files should be put in the folder called "./inputs/" in the same directory as the scripts. 
 
+
 <b>Input files to download</b>
 - DSSTox_Identifiers_and_CASRN_2021r1.csv: DSSTox DTXSID identifiers mapped to CAS Numbers and Names, downloaded from EPA CompTox Chemicals Dashboard: https://comptox.epa.gov/dashboard/downloads (last update Oct 18, 2021)
 - Ring_SupTable-all.chem.preds-2018-11-28.txt: ExpoCast modeled exposure data in Ring et al 2019 supplemental table 1 in https://doi.org/10.1021/acs.est.8b04056
@@ -51,6 +52,7 @@ Input files should be put in the folder called "./inputs/" in the same directory
 - MGDevlist_chemsonly.xlsx: List of chemicals that affect mammary gland development published in Rudel 2011 https://doi.org/10.1289/ehp.1002864, data compiled by the authors 
 
 ### Scripts
+The folder "./outputs/" will be created in the project root.
 Scripts should be run in order:
 - 1_MCList_refs.R: compile list of rodent MCs
 - 2_gentox_chems.R: compile chemical genotoxicity databases
@@ -58,4 +60,4 @@ Scripts should be run in order:
 - 4_BCrelevant_exposure_sources.R: compile exposure sources for BC-relevant chemicals
 - 5_BCRel-MGdev_comparison.R: compare lists of BC-relevant chemicals and mammary gland developmental toxicants and their genotoxic/endocrine-disrupting properties
 - 6_BCRel_effects_heatmap.R: create a figure showing positive/negative results and BC-relevant chemical space covered for MC, hormone synthesis, ER agonist, and genotoxicity databases 
-The folder "./outputs/" will be created in the project root. 
+ 
