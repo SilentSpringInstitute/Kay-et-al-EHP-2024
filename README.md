@@ -55,7 +55,8 @@ Input files should be put in a folder called "./inputs/" in the same directory a
 - MGDevlist_chemsonly.xlsx: List of chemicals that affect mammary gland development published in Rudel 2011 https://doi.org/10.1289/ehp.1002864, data compiled by the authors 
 
 ### Scripts
-The folder "./outputs/" will be created in the first script, MCList_refs
+The folder "./outputs/" will be created in the first script MCList_refs
+
 Scripts should be run in order:
 - 1_MCList_refs.R: compile list of rodent mammary carcinogens (MCs)
 - 2_gentox_chems.R: compile chemical genotoxicity databases
