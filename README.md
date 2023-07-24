@@ -1,5 +1,14 @@
-# Kay2022
-## Breast cancer-relevant chemicals paper
+# A new list of potential breast carcinogens identified using mechanistic screening and traditional animal testing
+## Authors
+Jennifer E. Kay1, Julia G. Brody1, Megan Schwarzman2,3,4, Ruthann A. Rudel1
+
+1Silent Spring Institute, Newton, MA; 
+2University of California, Berkeley, School of Public Health;
+3University of California, San Francisco, Family and Community Medicine;
+4Berkeley Center for Green Chemistry Center for Occupational and Environmental Health
+
+Corresponding author: Ruthann Rudel, Silent Spring Institute, Newton, MA 02460, USA. rudel@silentspring.org
+
 
 ### Programming language 
 
