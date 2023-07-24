@@ -38,30 +38,19 @@ Input files should be put in a folder called "./inputs/" in the same directory a
 - eChemPortalAPI_GeneticToxicityVitro_FinalRecords.xlsx: OECD eChemPortal in vitro genotoxicity database provided by Richard Judson at https://gaftp.epa.gov/Comptox/Staff/rjudson/datasets/genetox/ 
 - NLM_TOXNET_GENETOX_Substance.xlsx: Substances in National Library of Medicine (NLM) TOXNET's GENE-TOX database substances, downloaded from https://www.ncbi.nlm.nih.gov/pcsubstance?term=%22Genetic%20Toxicology%20Data%20Bank%20(GENE-TOX)%22%5BSourceName%5D%20AND%20hasnohold%5Bfilt%5D 
 - NLM_TOXNET_GENTOX_results.txt: Genotoxicity results in NLM TOXNET's GENE-TOX database, downloaded from https://www.ncbi.nlm.nih.gov/pcsubstance?term=%22Genetic%20Toxicology%20Data%20Bank%20(GENE-TOX)%22%5BSourceName%5D%20AND%20hasnohold%5Bfilt%5D 
-- ICE_NTP.txt: List of chemicals tested in NTP bioassays, downloaded Apr 12, 2022. Available by selecting list of "NTP Cancer Bioassay Chemicals" at https://ice.ntp.niehs.nih.gov/Search
-- ToxRef_MG_tested.csv: chemicals tested a mouse or rat carcinogenicity assay where mammary gland was assessed for gross or microscopic pathology. Downloaded most recent version (dated Apr 21, 2020) Full database available at: https://gaftp.epa.gov/comptox/High_Throughput_Screening_Data/Animal_Tox_Data/current
+- NTP_Cancer_Bioassay_Chemicals.xlsx: List of chemicals tested in NTP bioassays, downloaded May 2 2023. Available by selecting list of "NTP Cancer Bioassay Chemicals" at https://ice.ntp.niehs.nih.gov/Search
+- ToxRef_MG_tested04062023.csv: chemicals tested a mouse or rat carcinogenicity assay where mammary gland was assessed for gross or microscopic pathology. Downloaded most recent version (dated Apr 21, 2020) Full database available at: https://gaftp.epa.gov/comptox/High_Throughput_Screening_Data/Animal_Tox_Data/current
 - Karmaus_toxsci-15-0570-File009.csv: single-dose H295R results from Karmaus et al 2016, downloaded from https://doi.org/10.1093/toxsci/kfw002 
 - H295R_CR_Cardona_EPsummary.xlsx: Concentration-response H295R results as reported in Cardona and Rudel 2021 (https://pubmed.ncbi.nlm.nih.gov/34287026/) compiled by the authors 
-- Judson_toxsci-15-0258-File002.xlsx: Results from computational integration of in vitro assays for ER activity reported in Judson et al 2015, downloaded from supplemental information https://doi.org/10.1093/toxsci/kfv168 
-- BCRC_CPDAT.csv: EPA CPDat exposure data for BC-relevant chemicals. EPA data from Isaacs 2020 downloaded from https://doi.org/10.1038/s41370-019-0187-5 and exposure mapping executed with Alex Borrel's python script generateBoardExposure.py (Code available at https://github.com/SilentSpringInstitute/CPDatSSI, requires BC-relevant chemicals list created in script 3) 
-- HPVlist.xls: EPA's 2017 high production volume chemicals downloaded March 25, 2021 from CompTox dashboard https://comptox.epa.gov/dashboard/chemical-lists 
-- DrugProducts.txt: list of drugs in Drugs@FDA database downloaded from https://www.fda.gov/drugs/drug-approvals-and-databases/drugsfda-data-files 
-- DrugMarketingStatu.txt: marketing status of drug products downloaded from Drugs@FDA https://www.fda.gov/drugs/drug-approvals-and-databases/drugsfda-data-files 
-- DrugMarketingStatus_Lookup.txt: lookup key for marketing status downloaded from Drugs@FDA https://www.fda.gov/drugs/drug-approvals-and-databases/drugsfda-data-files 
-- FoodSubstances_clean.csv: FDA list of Substances Added to Food, downloaded from http://www.cfsanappsexternal.fda.gov/scripts/fdcc/?set=FoodSubstances, with top 4 rows and everything but CASRNs and chemical names removed to read into R correctly (original and cleaned data files available in inputs)
-- EPA_conventionalpesticides.csv: EPA list of active ingredients in conventional pesticides. For conventional, antimicrobial, and biopesticides, go to https://ordspub.epa.gov/ords/pesticides/f?p=CHEMICALSEARCH:1, filter Pesticide Type -> select type -> Actions -> Download
-- EPA_antimicrobials.csv: EPA list of active ingredients in antimicrobial pesticides, downloaded from https://ordspub.epa.gov/ords/pesticides/f?p=CHEMICALSEARCH:1 
-- EPA_biopesticides.csv: EPA list of active ingredients in biopesticides, downloaded from https://ordspub.epa.gov/ords/pesticides/f?p=CHEMICALSEARCH:1 
-- p65chemicalslist.xlsx: California's Proposition 65 list of chemicals as of Feb 25, 2022 downloaded from https://oehha.ca.gov/proposition-65/proposition-65-list 
+- Judson_toxsci-15-0258-File002.xlsx: Results from computational integration of in vitro assays for ER activity reported in Judson et al 2015, downloaded from supplemental information https://doi.org/10.1093/toxsci/kfv168  
 - MGDevlist_chemsonly.xlsx: List of chemicals that affect mammary gland development published in Rudel 2011 https://doi.org/10.1289/ehp.1002864, data compiled by the authors 
 
 ### Scripts
 The folder "./outputs/" will be created in the project root.
 Scripts should be run in order:
-- 1_MCList_refs.R: compile list of rodent MCs
+- 1_MCList_refs.R: compile list of rodent mammary carcinogens (MCs)
 - 2_gentox_chems.R: compile chemical genotoxicity databases
-- 3_BCrelevant_chem_effects.R: compile results for E2/P4 synthesis and ER agonism assays, construct list of BC-relevant chemicals 
-- 4_BCrelevant_exposure_sources.R: compile exposure sources for BC-relevant chemicals
-- 5_BCRel-MGdev_comparison.R: compare lists of BC-relevant chemicals and mammary gland developmental toxicants and their genotoxic/endocrine-disrupting properties
-- 6_BCRel_effects_heatmap.R: create a figure showing positive/negative results and BC-relevant chemical space covered for MC, hormone synthesis, ER agonist, and genotoxicity databases 
+- 3_BCrelevant_chem_effects.R: compile results of rodent cancer bioassays without mammary tumors (putative non-MCs), E2/P4 synthesis, and ER agonism assays; construct list of breast cancer-relevant chemicals with Key Characteristic (steroidogenic, ER agonistic, and genotoxic) activities; construct list with KCs of MCs and putative non-MCs
+- 4_BCRel-MGdev_comparison.R: compare lists of BC-relevant chemicals and mammary gland developmental toxicants and their genotoxic/endocrine-disrupting properties
+- 5_BCRC_tables_figures.R: create Excel file with supplemental tables created in R, and figures 2 and 3 for the paper  
  
