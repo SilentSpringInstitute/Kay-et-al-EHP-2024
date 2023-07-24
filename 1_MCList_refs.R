@@ -17,8 +17,8 @@ options(stringsAsFactors = FALSE)
 
 
 #create folder for code outputs. This folder will be used in each subsequent script
-# Commented so this only happens once and you don't accidentally write over an existing outputs folder later
-#dir.create("./outputs")
+# Comment this out after first time running so directory is only created once and you don't accidentally write over it later
+dir.create("./outputs")
 
 
 ## glossary matching CASRNs to DTXSIDs and chem names
