@@ -1,4 +1,4 @@
-# A new list of potential breast carcinogens identified using mechanistic screening and traditional animal testing
+# Application of the Key Characteristics Framework to Identify Potential Breast Carcinogens Using Publicly Available in Vivo, in Vitro, and in Silico Data
 ## Authors
 Jennifer E. Kay1, Julia G. Brody1, Megan Schwarzman2,3,4, Ruthann A. Rudel1
 
